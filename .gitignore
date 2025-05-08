@@ -1,0 +1,32 @@
+# Java backend
+target/
+*.log
+*.class
+*.jar
+*.war
+*.iml
+*.db
+hs_err_pid*
+/out/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.ipr
+*.iml
+
+# VSCode
+.vscode/
+
+# Node.js frontend
+node_modules/
+dist/
+.env*
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
