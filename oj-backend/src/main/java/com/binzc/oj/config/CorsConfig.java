@@ -12,7 +12,7 @@ public class CorsConfig implements WebMvcConfigurer {
         registry.addMapping("/**")
                 .allowCredentials(true)
                 // 允许的前端域名，多个域名可以使用 .allowedOrigins("http://localhost:8080", "http://otherdomain.com")
-                .allowedOrigins("http://localhost:8080","http://localhost:8081")
+                .allowedOrigins("http://localhost:8080","http://localhost:8081", "http://10.135.5.186:8081")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("*");

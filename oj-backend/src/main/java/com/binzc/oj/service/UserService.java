@@ -1,0 +1,74 @@
+package com.binzc.oj.service;
+
+import com.binzc.oj.common.BaseResponse;
+import com.binzc.oj.model.entity.User;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.binzc.oj.model.vo.LoginUserVO;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+* @author binzc
+* @description 针对表【user(用户)】的数据库操作Service
+* @createDate 2025-05-08 21:02:49
+*/
+public interface UserService extends IService<User> {
+
+    /**
+     * 用户注册
+     *
+     * @param userAccount   用户账户
+     * @param userPassword  用户密码
+     * @param checkPassword 校验密码
+     * @return 新用户 id
+     */
+    long userRegister(String userAccount, String userPassword, String checkPassword,String userRole);
+
+    /**
+     * 用户登录
+     *
+     * @param userAccount  用户账户
+     * @param userPassword 用户密码
+     * @param request
+     * @return 脱敏后的用户信息
+     */
+    LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request);
+
+
+    /**
+     * 获取当前登录用户
+     *
+     * @param request
+     * @return
+     */
+    User getLoginUser(HttpServletRequest request);
+
+    /**
+     * 获取脱敏的已登录用户信息
+     *
+     * @return
+     */
+    LoginUserVO getLoginUserVO(User user);
+
+
+    /**
+     * 更新头像
+     * @param file
+     * @param request
+     * @return
+     *
+     */
+
+    String uploadAvatar(MultipartFile file, HttpServletRequest request);
+
+    /**
+     * 确认修改头像是否
+     * @param url
+     * @param yesOrNo
+     * @param request
+     * @return
+     */
+    String confirmChangeAvatar(String url, boolean yesOrNo, HttpServletRequest request);
+
+}

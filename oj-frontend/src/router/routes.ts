@@ -8,6 +8,12 @@ import CallerComponent from "@/components/CallerComponent.vue";
 import UserLoginView from "@/views/user/UserLoginView.vue";
 import UserRegisterView from "@/views/user/UserRegisterView.vue";
 import UserLayout from "@/layouts/UserLayout.vue";
+import AboutView from "../views/AboutView.vue";
+import TestView from "@/views/TestView.vue";
+import QuestionAddView from "@/views/question/QuestionAdd.vue";
+import QuestionListView from "@/views/question/QuestionList.vue";
+import QuestionDetailView from "@/views/question/QuestionDetail.vue";
+
 export const routes: Array<RouteRecordRaw> = [
   {
     path: "/user",
@@ -30,9 +36,9 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
-    path: "/",
+    path: "/question/list",
     name: "浏览题目",
-    component: HomeView,
+    component: QuestionListView,
   },
   {
     path: "/hide",
@@ -61,6 +67,25 @@ export const routes: Array<RouteRecordRaw> = [
   {
     path: "/about",
     name: "关于我的",
-    component: () => import("../views/AboutView.vue"),
+    component: AboutView,
+  },
+  {
+    path: "/test",
+    name: "测试",
+    component: TestView,
+  },
+  {
+    path: "/question/add",
+    name: "添加题目",
+    component: QuestionAddView,
+  },
+  {
+    path: "/question/:id",
+    props: true,
+    name: "questionDetail",
+    component: QuestionDetailView,
+    meta: {
+      hideInMenu: true,
+    },
   },
 ];

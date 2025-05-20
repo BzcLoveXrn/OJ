@@ -40,6 +40,7 @@
 <script setup lang="ts">
 import { reactive } from "vue";
 import message from "@arco-design/web-vue/es/message";
+import { UserControllerService, UserLoginRequest } from "../../../generated";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 
@@ -58,19 +59,16 @@ const store = useStore();
  * 提交表单
  * @param data
  */
+import { useRoute } from "vue-router";
+
+const route = useRoute();
 const handleSubmit = async () => {
-  const res = {
-    code: 3,
-    message: "登录成功",
-  };
+  const res = await UserControllerService.userLoginUsingPost(form);
   // 登录成功，跳转到主页
   if (res.code === 0) {
     await store.dispatch("user/getLoginUser");
-    message.success("登陆成功，" + res.message);
-    router.push({
-      path: "/",
-      replace: true,
-    });
+    const redirectPath = route.query.redirect || "/";
+    router.push({ path: redirectPath as string, replace: true });
   } else {
     message.error("登陆失败，" + res.message);
   }

@@ -19,7 +19,7 @@
 #basicLayout {
 }
 #basicLayout .content {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   padding: 20px;
 }
 #basicLayout .footer {
