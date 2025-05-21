@@ -3,6 +3,7 @@ package com.binzc.sandbox.config;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientBuilder;
+import com.github.dockerjava.netty.NettyDockerCmdExecFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -23,7 +24,10 @@ public class DockerClientConfig {
                 .withDockerHost(dockerHost)
                 .build();
 
-        return DockerClientBuilder.getInstance(config).build();
+
+        return DockerClientBuilder.getInstance(config)
+                .withDockerCmdExecFactory(new NettyDockerCmdExecFactory())
+                .build();
     }
 }
 
