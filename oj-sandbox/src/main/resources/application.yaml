@@ -5,4 +5,6 @@ spring:
 server:
   port: 8122
   address: 0.0.0.0
+  servlet:
+    context-path: /api/code
 
