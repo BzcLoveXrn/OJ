@@ -92,16 +92,17 @@ public class CppCodeExecutor implements CodeExecutor {
             //获得码
             InspectExecResponse execResponse = dockerClient.inspectExecCmd(execId).exec();
             Integer exitCode = execResponse.getExitCode();
+            String message=null,errorMessage=null;
             try {
-                String message = stdoutStream.toString("UTF-8");
-                String errorMessage = stderrStream.toString("UTF-8");
+                message = stdoutStream.toString("UTF-8");
+                errorMessage = stderrStream.toString("UTF-8");
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("字符集不匹配");
             }
             if(exitCode==null||exitCode!=0){
                 ExecuteCodeResponse executeCodeResponse=new ExecuteCodeResponse();
                 executeCodeResponse.setStatus(exitCode);
-                executeCodeResponse.setMessage("编译失败");
+                executeCodeResponse.setMessage(errorMessage);
                 executeCodeResponse.setExecuteMessageList(null);
                 return executeCodeResponse;
             }
@@ -220,6 +221,8 @@ public class CppCodeExecutor implements CodeExecutor {
         FileUtils.deleteFile(absolute);
         ExecuteCodeResponse executeCodeResponse=new ExecuteCodeResponse();
         executeCodeResponse.setExecuteMessageList(data);
+        executeCodeResponse.setStatus(0);
+        executeCodeResponse.setMessage("执行成功");
         return executeCodeResponse;
     }
 

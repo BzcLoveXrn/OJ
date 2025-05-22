@@ -88,7 +88,7 @@ public class JavaCodeExecutor implements CodeExecutor {
                         .exec(callback)
                         .awaitCompletion();
             } catch (InterruptedException e) {
-                throw new RuntimeException("C++编译失败");
+                throw new RuntimeException("JAVA编译失败");
             }
             //获得码
             InspectExecResponse execResponse = dockerClient.inspectExecCmd(execId).exec();
@@ -221,6 +221,8 @@ public class JavaCodeExecutor implements CodeExecutor {
         FileUtils.deleteFile(absolute);
         ExecuteCodeResponse executeCodeResponse=new ExecuteCodeResponse();
         executeCodeResponse.setExecuteMessageList(data);
+        executeCodeResponse.setStatus(0);
+        executeCodeResponse.setMessage("执行成功");
         return executeCodeResponse;
     }
 

@@ -40,7 +40,10 @@ public class JudgeServiceImpl implements JudgeService{
     @Resource
     private JudgeManager judgeManager;
 
-    @Value("${codesandbox.type:example}")
+    @Resource
+    private CodeSandBoxFactory codeSandBoxFactory;
+
+    @Value("${codesandbox.type:remote}")
     private String type;
 
     @Override
@@ -76,7 +79,7 @@ public class JudgeServiceImpl implements JudgeService{
         }
         //根据配置文件，获得相应的沙箱
         CodeSandBoxType codeSandBoxType = CodeSandBoxType.getEnumByValue(type);
-        CodeSandBox codeSandBox= CodeSandBoxFactory.newCodeSandBox(codeSandBoxType);
+        CodeSandBox codeSandBox= codeSandBoxFactory.newCodeSandBox(codeSandBoxType);
         // 构建判题机输入用例
         String language=questionSubmit.getLanguage();
         String code=questionSubmit.getCode();
@@ -89,28 +92,29 @@ public class JudgeServiceImpl implements JudgeService{
                 .inputList(inputList)
                 .build();
         ExecuteCodeResponse executeCodeResponse = codeSandBox.executeCode(executeCodeRequest);
-        // 5）根据沙箱的执行结果，设置题目的判题状态和信息
-        List<String> outputList = executeCodeResponse.getOutputList();
-        JudgeContext judgeContext = new JudgeContext();
-        judgeContext.setJudgeInfo(executeCodeResponse.getJudgeInfo());
-        judgeContext.setInputList(inputList);
-        judgeContext.setOutputList(outputList);
-        judgeContext.setJudgeCaseList(judgeCaseList);
-        judgeContext.setQuestion(question);
-        judgeContext.setQuestionSubmit(questionSubmit);
-        //判题启动！
-        JudgeInfo judgeInfo = judgeManager.doJudge(judgeContext);
-        // 6）修改数据库中的判题结果
-        questionSubmitUpdate = new QuestionSubmit();
-        questionSubmitUpdate.setId(questionSubmitId);
-        questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
-        questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-        questionSubmitUpdate.setUpdateTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
-        update = questionSubmitService.updateById(questionSubmitUpdate);
-        if (!update) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
-        }
-        QuestionSubmit questionSubmitResult = questionSubmitService.getById(questionId);
-        return questionSubmitResult;
+//        // 5）根据沙箱的执行结果，设置题目的判题状态和信息
+//        List<String> outputList = executeCodeResponse.getOutputList();
+//        JudgeContext judgeContext = new JudgeContext();
+//        judgeContext.setJudgeInfo(executeCodeResponse.getJudgeInfo());
+//        judgeContext.setInputList(inputList);
+//        judgeContext.setOutputList(outputList);
+//        judgeContext.setJudgeCaseList(judgeCaseList);
+//        judgeContext.setQuestion(question);
+//        judgeContext.setQuestionSubmit(questionSubmit);
+//        //判题启动！
+//        JudgeInfo judgeInfo = judgeManager.doJudge(judgeContext);
+//        // 6）修改数据库中的判题结果
+//        questionSubmitUpdate = new QuestionSubmit();
+//        questionSubmitUpdate.setId(questionSubmitId);
+//        questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
+//        questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
+//        questionSubmitUpdate.setUpdateTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+//        update = questionSubmitService.updateById(questionSubmitUpdate);
+//        if (!update) {
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
+//        }
+//        QuestionSubmit questionSubmitResult = questionSubmitService.getById(questionId);
+//        return questionSubmitResult;
+        return null;
     }
 }

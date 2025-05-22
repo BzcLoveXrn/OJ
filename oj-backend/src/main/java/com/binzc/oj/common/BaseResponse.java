@@ -1,6 +1,7 @@
 package com.binzc.oj.common;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  *
@@ -10,6 +11,7 @@ import lombok.Data;
  * @param <T>
  */
 @Data
+@NoArgsConstructor
 public class BaseResponse<T> {
     private int code;
     private T data;
