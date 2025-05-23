@@ -64,6 +64,11 @@ create table if not exists question_submit
     index idx_userId (userId)
 ) comment '题目提交';
 
+
+ALTER TABLE question_submit
+    ADD COLUMN judgeMessages TEXT NULL COMMENT '判题详情列表（List<JudgeMessage> 的 JSON 序列化）';
+
+
 -- 帖子表
 create table if not exists post
 (

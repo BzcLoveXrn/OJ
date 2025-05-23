@@ -5,11 +5,10 @@ import com.binzc.oj.common.ErrorCode;
 import com.binzc.oj.exception.BusinessException;
 import com.binzc.oj.judge.codesandbox.CodeSandBox;
 import com.binzc.oj.judge.codesandbox.CodeSandBoxFactory;
-import com.binzc.oj.judge.codesandbox.model.CodeSandBoxType;
-import com.binzc.oj.judge.codesandbox.model.ExecuteCodeRequest;
-import com.binzc.oj.judge.codesandbox.model.ExecuteCodeResponse;
+import com.binzc.oj.judge.codesandbox.model.*;
 import com.binzc.oj.judge.strategy.JudgeContext;
 import com.binzc.oj.model.dto.question.JudgeCase;
+import com.binzc.oj.model.dto.question.JudgeConfig;
 import com.binzc.oj.model.dto.questionsubmit.JudgeInfo;
 import com.binzc.oj.model.entity.Question;
 import com.binzc.oj.model.entity.QuestionSubmit;
@@ -91,30 +90,80 @@ public class JudgeServiceImpl implements JudgeService{
                 .language(language)
                 .inputList(inputList)
                 .build();
-        ExecuteCodeResponse executeCodeResponse = codeSandBox.executeCode(executeCodeRequest);
-//        // 5）根据沙箱的执行结果，设置题目的判题状态和信息
-//        List<String> outputList = executeCodeResponse.getOutputList();
-//        JudgeContext judgeContext = new JudgeContext();
-//        judgeContext.setJudgeInfo(executeCodeResponse.getJudgeInfo());
-//        judgeContext.setInputList(inputList);
-//        judgeContext.setOutputList(outputList);
-//        judgeContext.setJudgeCaseList(judgeCaseList);
-//        judgeContext.setQuestion(question);
-//        judgeContext.setQuestionSubmit(questionSubmit);
-//        //判题启动！
-//        JudgeInfo judgeInfo = judgeManager.doJudge(judgeContext);
-//        // 6）修改数据库中的判题结果
-//        questionSubmitUpdate = new QuestionSubmit();
-//        questionSubmitUpdate.setId(questionSubmitId);
-//        questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
-//        questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-//        questionSubmitUpdate.setUpdateTime(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
-//        update = questionSubmitService.updateById(questionSubmitUpdate);
-//        if (!update) {
-//            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
-//        }
-//        QuestionSubmit questionSubmitResult = questionSubmitService.getById(questionId);
-//        return questionSubmitResult;
-        return null;
+        int retryCount = 0;
+        int maxRetry = 5;
+        ExecuteCodeResponse executeCodeResponse = null;
+
+        do {
+            executeCodeResponse = codeSandBox.executeCode(executeCodeRequest);
+            retryCount++;
+            try {
+                if (executeCodeResponse == null) {
+                    Thread.sleep(200); // 加一点点延迟，避免空转
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException("线程中断异常");
+            }
+        } while (executeCodeResponse == null && retryCount < maxRetry);
+
+        // 没办法咯，判题一直失败，可能是服务挂了
+        if (executeCodeResponse == null) {
+            questionSubmitUpdate = new QuestionSubmit();
+            questionSubmitUpdate.setId(questionSubmitId);
+            questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.PANIC.getValue());
+            update = questionSubmitService.updateById(questionSubmitUpdate);
+            if (!update) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
+            }
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "执行代码失败，已重试多次");
+        }
+        //成功，开始判题
+        else if(executeCodeResponse.getStatus()==0&&executeCodeResponse.getExecuteMessageList()!=null){
+            List<ExecuteMessage>executeMessages=executeCodeResponse.getExecuteMessageList();
+            List<String> outputList = judgeCaseList.stream().map(JudgeCase::getOutput).collect(Collectors.toList());
+            JudgeContext judgeContext=new JudgeContext();
+            judgeContext.setExecuteMessages(executeMessages);
+            judgeContext.setOutputList(outputList);
+            judgeContext.setLanguage(language);
+            JudgeConfig judgeConfig=JSONUtil.toBean(question.getJudgeConfig(), JudgeConfig.class);
+            judgeContext.setJudgeConfig(judgeConfig);
+            JudgeResult judgeResult=judgeManager.doJudge(judgeContext);
+            questionSubmitUpdate = new QuestionSubmit();
+            questionSubmitUpdate.setId(questionSubmitId);
+            JudgeInfo judgeInfo=judgeResult.getJudgeInfo();
+            questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeResult.getJudgeInfo()));
+            if("Accepted".equals(judgeInfo.getMessage())){
+                questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
+
+            }else {
+                questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());
+            }
+            questionSubmitUpdate.setJudgeMessages(JSONUtil.toJsonStr(judgeResult.getJudgeMessages()));
+            update = questionSubmitService.updateById(questionSubmitUpdate);
+            if (!update) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
+            }
+            QuestionSubmit questionSubmitResult = questionSubmitService.getById(questionId);
+            return questionSubmitResult;
+
+        }
+        //编译错误
+        else if (executeCodeResponse.getStatus()!=0&&executeCodeResponse.getExecuteMessageList()==null) {
+            questionSubmitUpdate = new QuestionSubmit();
+            questionSubmitUpdate.setId(questionSubmitId);
+            questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());
+            JudgeInfo judgeInfo=new JudgeInfo();
+            judgeInfo.setMemory(null);
+            judgeInfo.setTime(null);
+            judgeInfo.setMessage("Compile Error");
+            questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
+            update = questionSubmitService.updateById(questionSubmitUpdate);
+            if (!update) {
+                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
+            }
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "执行代码失败，已重试多次");
+        }else{
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "作者写代码不严谨的错误");
+        }
     }
 }

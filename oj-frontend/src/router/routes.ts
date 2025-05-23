@@ -13,6 +13,7 @@ import TestView from "@/views/TestView.vue";
 import QuestionAddView from "@/views/question/QuestionAdd.vue";
 import QuestionListView from "@/views/question/QuestionList.vue";
 import QuestionDetailView from "@/views/question/QuestionDetail.vue";
+import SubmitRecordsView from "@/views/question/SubmitRecords.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -39,6 +40,11 @@ export const routes: Array<RouteRecordRaw> = [
     path: "/question/list",
     name: "浏览题目",
     component: QuestionListView,
+  },
+  {
+    path: "/question/submitRecords",
+    name: "提交记录",
+    component: SubmitRecordsView,
   },
   {
     path: "/hide",

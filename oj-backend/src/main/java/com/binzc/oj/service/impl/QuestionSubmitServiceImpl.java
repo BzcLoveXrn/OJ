@@ -1,11 +1,14 @@
 package com.binzc.oj.service.impl;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.binzc.oj.common.ErrorCode;
 import com.binzc.oj.exception.BusinessException;
 import com.binzc.oj.judge.JudgeService;
 import com.binzc.oj.mapper.QuestionSubmitMapper;
+import com.binzc.oj.model.dto.questionsubmit.JudgeInfo;
+import com.binzc.oj.model.dto.questionsubmit.QueryParmRequest;
 import com.binzc.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.binzc.oj.model.entity.Question;
 import com.binzc.oj.model.entity.User;
@@ -13,16 +16,20 @@ import com.binzc.oj.model.enums.QuestionSubmitLanguageEnum;
 import com.binzc.oj.model.enums.QuestionSubmitStatusEnum;
 import com.binzc.oj.model.vo.CodeVo;
 import com.binzc.oj.model.vo.QuestionSubmitVo;
+import com.binzc.oj.model.vo.SubmitRecodWithPageVo;
+import com.binzc.oj.model.vo.SubmitRecordSimple;
 import com.binzc.oj.service.QuestionService;
 import com.binzc.oj.service.QuestionSubmitService;
 import com.binzc.oj.model.entity.QuestionSubmit;
 
 import com.binzc.oj.service.UserService;
+import org.apache.ibatis.annotations.Param;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -35,6 +42,9 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
     implements QuestionSubmitService {
     @Resource
    private UserService userService;
+
+    @Resource
+    private QuestionSubmitMapper questionSubmitMapper;
 
     @Resource
     private QuestionService questionService;
@@ -96,6 +106,32 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         });
         QuestionSubmitVo questionSubmitVo = QuestionSubmitVo.generateVo(questionSubmit, question, user);
         return questionSubmitVo;
+    }
+
+    @Override
+    public SubmitRecodWithPageVo getSubmitRecords(QueryParmRequest queryParmRequest) {
+        String userName= queryParmRequest.getUserName();
+        String questionTitle= queryParmRequest.getQuestionTitle();
+        Integer submitStatus= queryParmRequest.getSubmitStatus();
+        String language="全部语言".equals(queryParmRequest.getLanguage())?"":queryParmRequest.getLanguage();
+        Integer pageNo= queryParmRequest.getPageNo();
+        Integer pageSize= queryParmRequest.getPageSize();
+        Integer offset = (pageNo - 1) * pageSize;
+        List<SubmitRecordSimple> submitRecordSimples = questionSubmitMapper.getSubmitRecordSimpleList(userName, questionTitle, submitStatus, language, offset, pageSize);
+        for(SubmitRecordSimple submitRecordSimple:submitRecordSimples){
+            JudgeInfo judgeInfo = JSONUtil.toBean(submitRecordSimple.getJudgeInfo(), JudgeInfo.class);
+            submitRecordSimple.setMemoryUse(judgeInfo.getMemory());
+            submitRecordSimple.setTimeUse(judgeInfo.getTime());
+            submitRecordSimple.setMessage(QuestionSubmitStatusEnum.getEnumByValue(submitRecordSimple.getStatus()).getText());
+        }
+        Long total = questionSubmitMapper.countSubmitRecordSimpleList(userName, questionTitle, submitStatus, language);
+        SubmitRecodWithPageVo submitRecodWithPageVo = new SubmitRecodWithPageVo();
+        submitRecodWithPageVo.setPageNo(pageNo);
+        submitRecodWithPageVo.setPageSize(pageSize);
+        submitRecodWithPageVo.setTotal(total);
+        submitRecodWithPageVo.setSubmitRecordSimples(submitRecordSimples);
+        return submitRecodWithPageVo;
+
     }
 }
 

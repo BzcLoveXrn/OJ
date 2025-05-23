@@ -4,11 +4,14 @@ import com.binzc.oj.common.BaseResponse;
 import com.binzc.oj.common.ErrorCode;
 import com.binzc.oj.common.ResultUtils;
 import com.binzc.oj.exception.BusinessException;
+import com.binzc.oj.model.dto.questionsubmit.QueryParmRequest;
 import com.binzc.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.binzc.oj.model.entity.QuestionSubmit;
 import com.binzc.oj.model.entity.User;
 import com.binzc.oj.model.vo.CodeVo;
 import com.binzc.oj.model.vo.QuestionSubmitVo;
+import com.binzc.oj.model.vo.SubmitRecodWithPageVo;
+import com.binzc.oj.model.vo.SubmitRecordSimple;
 import com.binzc.oj.service.QuestionSubmitService;
 import com.binzc.oj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 @Slf4j
 @RestController
@@ -59,5 +63,13 @@ public class QuestionSubmitController {
         QuestionSubmitVo questionSubmitVo=questionSubmitService.doQuestionSubmit(questionSubmitAddRequest,loginUser);
         return ResultUtils.success(questionSubmitVo);
 
+    }
+
+    @PostMapping("/submitRecord")
+    public BaseResponse<SubmitRecodWithPageVo> submitRecords(@RequestBody QueryParmRequest queryParmRequest, HttpServletRequest request){
+        //先登录
+        //final User loginUser = userService.getLoginUser(request);
+        SubmitRecodWithPageVo submitRecodWithPageVo=questionSubmitService.getSubmitRecords(queryParmRequest);
+        return ResultUtils.success(submitRecodWithPageVo);
     }
 }

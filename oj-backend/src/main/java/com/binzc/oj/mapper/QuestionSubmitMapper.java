@@ -2,6 +2,10 @@ package com.binzc.oj.mapper;
 
 import com.binzc.oj.model.entity.QuestionSubmit;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.binzc.oj.model.vo.SubmitRecordSimple;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
 * @author binzc
@@ -10,6 +14,17 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @Entity com.binzc.oj.model.entity.QuestionSubmit
 */
 public interface QuestionSubmitMapper extends BaseMapper<QuestionSubmit> {
+    public List<SubmitRecordSimple> getSubmitRecordSimpleList(@Param("userName")String userName,
+                                                              @Param("questionTitle") String questionTitle,
+                                                              @Param("submitStatus") Integer submitStatus,
+                                                              @Param("language") String language,
+                                                              @Param("offset") Integer offset,
+                                                              @Param("pageSize") Integer pageSize);
+
+    public long countSubmitRecordSimpleList(@Param("userName")String userName,
+                                            @Param("questionTitle") String questionTitle,
+                                            @Param("submitStatus") Integer submitStatus,
+                                            @Param("language") String language);
 
 }
 

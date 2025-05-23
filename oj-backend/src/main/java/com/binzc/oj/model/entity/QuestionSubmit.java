@@ -66,6 +66,11 @@ public class QuestionSubmit implements Serializable {
      */
     private Integer isDelete;
 
+    /**
+     *  详细判题信息
+     */
+    private String judgeMessages;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

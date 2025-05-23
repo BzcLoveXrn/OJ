@@ -2,7 +2,7 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="generator.mapper.QuestionSubmitMapper">
+<mapper namespace="com.binzc.oj.mapper.QuestionSubmitMapper">
 
     <resultMap id="BaseResultMap" type="com.binzc.oj.model.entity.QuestionSubmit">
             <id property="id" column="id" />
@@ -15,10 +15,73 @@
             <result property="createTime" column="createTime" />
             <result property="updateTime" column="updateTime" />
             <result property="isDelete" column="isDelete" />
+            <result property="judgeMessages" column="judgeMessages" />
     </resultMap>
 
     <sql id="Base_Column_List">
         id,language,code,judgeInfo,status,questionId,
-        userId,createTime,updateTime,isDelete
+        userId,createTime,updateTime,isDelete,judgeMessages
     </sql>
+
+    <select id="getSubmitRecordSimpleList" resultType="com.binzc.oj.model.vo.SubmitRecordSimple">
+        SELECT
+            qs.id AS submitId,
+            u.id AS userId,
+            u.userName AS userName,
+            u.userAvatar AS userAvatar,
+            q.id AS questionId,
+            q.title AS questionTitle,
+            qs.language AS language,
+            qs.status as status,
+        CONCAT(ROUND(CHAR_LENGTH(qs.code) / 1024, 2), ' KB') AS codeLength,
+        qs.createTime AS submitTime,
+        NULL AS timeUse,
+        NULL AS memoryUse,
+        NULL AS message,
+        qs.judgeInfo AS judgeInfo
+        FROM
+            question_submit qs
+            LEFT JOIN user u ON qs.userId = u.id
+            LEFT JOIN question q ON qs.questionId = q.id
+        <where>
+            <if test="userName != null and userName != ''">
+                AND u.userName LIKE CONCAT('%', #{userName}, '%')
+            </if>
+            <if test="questionTitle != null and questionTitle != ''">
+                AND q.title LIKE CONCAT('%', #{questionTitle}, '%')
+            </if>
+            <if test="submitStatus != null and submitStatus != -1">
+                AND #{submitStatus} = qs.status
+            </if>
+            <if test="language != null and language != ''">
+                AND qs.language = #{language}
+            </if>
+        </where>
+        ORDER BY qs.createTime DESC
+            LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <!-- 查询总数 -->
+    <select id="countSubmitRecordSimpleList" resultType="long">
+        SELECT COUNT(*)
+        FROM
+        question_submit qs
+        LEFT JOIN user u ON qs.userId = u.id
+        LEFT JOIN question q ON qs.questionId = q.id
+        <where>
+            <if test="userName != null and userName != ''">
+                AND u.userName LIKE CONCAT('%', #{userName}, '%')
+            </if>
+            <if test="questionTitle != null and questionTitle != ''">
+                AND q.title LIKE CONCAT('%', #{questionTitle}, '%')
+            </if>
+            <if test="submitStatus != null and submitStatus != -1">
+                AND #{submitStatus} = qs.status
+            </if>
+            <if test="language != null and language != ''">
+                AND qs.language = #{language}
+            </if>
+        </where>
+    </select>
+
 </mapper>

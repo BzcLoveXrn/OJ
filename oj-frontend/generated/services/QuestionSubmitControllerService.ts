@@ -4,6 +4,8 @@
 /* eslint-disable */
 import type { BaseResponse_CodeVo_ } from '../models/BaseResponse_CodeVo_';
 import type { BaseResponse_QuestionSubmitVo_ } from '../models/BaseResponse_QuestionSubmitVo_';
+import type { BaseResponse_SubmitRecodWithPageVo_ } from '../models/BaseResponse_SubmitRecodWithPageVo_';
+import type { QueryParmRequest } from '../models/QueryParmRequest';
 import type { QuestionSubmitAddRequest } from '../models/QuestionSubmitAddRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -45,6 +47,27 @@ export class QuestionSubmitControllerService {
             query: {
                 'questionId': questionId,
             },
+            errors: {
+                401: `Unauthorized`,
+                403: `Forbidden`,
+                404: `Not Found`,
+            },
+        });
+    }
+    /**
+     * submitRecords
+     * @param queryParmRequest queryParmRequest
+     * @returns BaseResponse_SubmitRecodWithPageVo_ OK
+     * @returns any Created
+     * @throws ApiError
+     */
+    public static submitRecordsUsingPost(
+        queryParmRequest: QueryParmRequest,
+    ): CancelablePromise<BaseResponse_SubmitRecodWithPageVo_ | any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/question/submit/submitRecord',
+            body: queryParmRequest,
             errors: {
                 401: `Unauthorized`,
                 403: `Forbidden`,

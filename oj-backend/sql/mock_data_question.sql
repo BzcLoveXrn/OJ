@@ -261,3 +261,31 @@ VALUES
  '[{"input": "A man, a plan, a canal: Panama", "output": "true"}, {"input": "race a car", "output": "false"}, {"input": " ", "output": "true"}, {"input": "0P", "output": "false"}]',
  '{"timeLimit": 500, "memoryLimit": 128, "stackLimit": 64}',
  765, 721, 2, DATE_SUB(NOW(), INTERVAL FLOOR(RAND() * 140) DAY))
+
+
+SELECT
+    qs.id AS submitId,
+    u.id AS userId,
+    u.userName AS userName,
+    u.userAvatar AS userAvatar,
+    q.id AS questionId,
+    q.title AS questionTitle,
+    qs.language AS language,
+  CONCAT(ROUND(CHAR_LENGTH(qs.code) / 1024, 2), ' KB') AS codeLength,
+  qs.createTime AS submitTime,
+  NULL AS timeUse,
+  NULL AS memoryUse,
+  NULL AS status,
+  qs.judgeInfo AS judgeInfo
+FROM
+    question_submit qs
+    LEFT JOIN user u ON qs.userId = u.id
+    LEFT JOIN question q ON qs.questionId = q.id
+WHERE
+    (NULL IS NULL OR u.userName LIKE CONCAT('%', NULL, '%'))
+  AND (NULL IS NULL OR q.title LIKE CONCAT('%', NULL, '%'))
+  AND (NULL IS NULL OR JSON_EXTRACT(qs.judgeInfo, '$.status') = NULL)
+  AND (NULL IS NULL OR qs.language = NULL)
+ORDER BY
+    qs.createTime DESC
+    LIMIT 20 OFFSET 0

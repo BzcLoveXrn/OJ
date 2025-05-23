@@ -1,10 +1,8 @@
 package com.binzc.oj.judge;
 
 
-import com.binzc.oj.judge.strategy.DefaultJudgeStrategy;
-import com.binzc.oj.judge.strategy.JavaLanguageJudgeStrategy;
-import com.binzc.oj.judge.strategy.JudgeContext;
-import com.binzc.oj.judge.strategy.JudgeStrategy;
+import com.binzc.oj.judge.codesandbox.model.JudgeResult;
+import com.binzc.oj.judge.strategy.*;
 import com.binzc.oj.model.dto.questionsubmit.JudgeInfo;
 import com.binzc.oj.model.entity.QuestionSubmit;
 import org.springframework.stereotype.Service;
@@ -21,12 +19,15 @@ public class JudgeManager {
      * @param judgeContext
      * @return
      */
-    JudgeInfo doJudge(JudgeContext judgeContext) {
-        QuestionSubmit questionSubmit = judgeContext.getQuestionSubmit();
-        String language = questionSubmit.getLanguage();
+    JudgeResult doJudge(JudgeContext judgeContext) {
+        String language = judgeContext.getLanguage();
         JudgeStrategy judgeStrategy = new DefaultJudgeStrategy();
-        if ("java".equals(language)) {
+        if ("java".equalsIgnoreCase(language)) {
             judgeStrategy = new JavaLanguageJudgeStrategy();
+        } else if ("cpp".equalsIgnoreCase(language)) {
+            judgeStrategy=new CppLanguageJudgeStrategy();
+        } else if ("python".equalsIgnoreCase(language)) {
+            judgeStrategy=new PythonLanguageJudgeStrategy();
         }
         return judgeStrategy.doJudge(judgeContext);
     }

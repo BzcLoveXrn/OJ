@@ -4,7 +4,7 @@
       <a-layout-header class="header">
         <GlobalHeader />
       </a-layout-header>
-      <a-layout-content class="content">
+      <a-layout-content class="content" style="background: #efefef">
         <router-view />
       </a-layout-content>
       <a-layout-footer class="footer">

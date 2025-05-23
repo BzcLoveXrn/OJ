@@ -10,7 +10,7 @@ import com.binzc.oj.model.enums.JudgeInfoMessageEnum;
 import java.util.ArrayList;
 import java.util.List;
 
-public class JavaLanguageJudgeStrategy implements JudgeStrategy{
+public class PythonLanguageJudgeStrategy implements JudgeStrategy{
     @Override
     public JudgeResult doJudge(JudgeContext judgeContext) {
         // 准备工作
@@ -52,11 +52,11 @@ public class JavaLanguageJudgeStrategy implements JudgeStrategy{
                     maxMemory=Math.max(memory,maxMemory);
                 }
                 //超时
-                if(time>judgeConfig.getTimeLimit()*2){
+                if(time>judgeConfig.getTimeLimit()*10){
                     success=false;
                     judgeMessage.setStatus(JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED.getText());
                     judgeMessage.setStatusSingle(JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED.getValue());
-                } else if (memory > judgeConfig.getMemoryLimit()*2) {
+                } else if (memory > judgeConfig.getMemoryLimit()*10) {
                     success=false;
                     judgeMessage.setStatus(JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED.getText());
                     judgeMessage.setStatusSingle(JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED.getValue());

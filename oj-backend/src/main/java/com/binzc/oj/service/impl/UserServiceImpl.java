@@ -150,18 +150,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Override
     public String uploadAvatar(MultipartFile file, HttpServletRequest request) {
-        // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
-        if (currentUser == null || currentUser.getId() == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-        }
-        long userId= currentUser.getId();
+        //final User user = this.getLoginUser(request);
+        //long userId=user.getId();
+        long userId=1;
         try {
             // 获取运行目录（backend），跳出到其父目录
             File projectDir = new File(System.getProperty("user.dir"));
-            File rootDir = projectDir.getParentFile();
-            File saveDir = new File(rootDir, "static/images");
+            File saveDir = new File(projectDir, "static/images");
 
             if (!saveDir.exists()) {
                 saveDir.mkdirs();

@@ -22,6 +22,9 @@ spring:
     pathmatch:
       matching-strategy: ant_path_matcher
 
+  jackson:
+    time-zone: Asia/Shanghai
+
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -31,3 +34,6 @@ mybatis-plus:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
+  mapper-locations: classpath*:mapper/*.xml
+
+

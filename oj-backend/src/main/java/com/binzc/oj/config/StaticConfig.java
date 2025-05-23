@@ -11,6 +11,6 @@ public class StaticConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // http://localhost:8080/images/xxx.jpg 映射到 文件系统的 ../images/xxx.jpg
         registry.addResourceHandler("/static/images/**")
-                .addResourceLocations("file:../static/images/");
+                .addResourceLocations("file:static/images/");
     }
 }

@@ -1,7 +1,9 @@
 package com.binzc.oj.judge.strategy;
 
 
+import com.binzc.oj.judge.codesandbox.model.ExecuteMessage;
 import com.binzc.oj.model.dto.question.JudgeCase;
+import com.binzc.oj.model.dto.question.JudgeConfig;
 import com.binzc.oj.model.dto.questionsubmit.JudgeInfo;
 import com.binzc.oj.model.entity.Question;
 import com.binzc.oj.model.entity.QuestionSubmit;
@@ -14,17 +16,23 @@ import java.util.List;
  */
 @Data
 public class JudgeContext {
+    /**
+     * 预期要求
+     */
+    private  JudgeConfig judgeConfig;
+    /**
+     * 程序输出结果
+     */
+    List<ExecuteMessage>executeMessages;
 
-    private JudgeInfo judgeInfo;
-
-    private List<String> inputList;
-
+    /**
+     * 预期输出
+     */
     private List<String> outputList;
 
-    private List<JudgeCase> judgeCaseList;
-
-    private Question question;
-
-    private QuestionSubmit questionSubmit;
+    /**
+     * 语言
+     */
+    private String Language;
 
 }

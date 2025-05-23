@@ -110,12 +110,6 @@ public class UserController {
      */
     @PostMapping("/uploadAvatar")
     public BaseResponse<String> uploadAvatar(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
-        // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
-        if (currentUser == null || currentUser.getId() == null) {
-            return ResultUtils.error(ErrorCode.NOT_LOGIN_ERROR);
-        }
         String url= userService.uploadAvatar(file, request);
         return ResultUtils.success(url);
     }

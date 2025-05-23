@@ -6,11 +6,13 @@ import com.binzc.oj.judge.codesandbox.model.JudgeResult;
 import com.binzc.oj.model.dto.question.JudgeConfig;
 import com.binzc.oj.model.dto.questionsubmit.JudgeInfo;
 import com.binzc.oj.model.enums.JudgeInfoMessageEnum;
+import com.google.protobuf.ByteString;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class JavaLanguageJudgeStrategy implements JudgeStrategy{
+public class CppLanguageJudgeStrategy implements JudgeStrategy{
+
     @Override
     public JudgeResult doJudge(JudgeContext judgeContext) {
         // 准备工作
@@ -52,11 +54,11 @@ public class JavaLanguageJudgeStrategy implements JudgeStrategy{
                     maxMemory=Math.max(memory,maxMemory);
                 }
                 //超时
-                if(time>judgeConfig.getTimeLimit()*2){
+                if(time>judgeConfig.getTimeLimit()){
                     success=false;
                     judgeMessage.setStatus(JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED.getText());
                     judgeMessage.setStatusSingle(JudgeInfoMessageEnum.TIME_LIMIT_EXCEEDED.getValue());
-                } else if (memory > judgeConfig.getMemoryLimit()*2) {
+                } else if (memory > judgeConfig.getMemoryLimit()) {
                     success=false;
                     judgeMessage.setStatus(JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED.getText());
                     judgeMessage.setStatusSingle(JudgeInfoMessageEnum.MEMORY_LIMIT_EXCEEDED.getValue());

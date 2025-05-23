@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 @Component
 public class RemoteCodeSandBox implements CodeSandBox {
-    @Value("${codesandbox.url:http://localhost:8122/executeCode}")
+    @Value("${codesandbox.url:http://121.40.216.152:8122/api/code/executeCode}")
     private String url;
 
     @Autowired
@@ -34,17 +34,15 @@ public class RemoteCodeSandBox implements CodeSandBox {
                     new ParameterizedTypeReference<BaseResponse<ExecuteCodeResponse>>() {}
             );
             BaseResponse<ExecuteCodeResponse> baseResponse = response.getBody();
-            System.out.println(baseResponse);
             if (baseResponse.getCode()==0){
                 return baseResponse.getData();
             }else {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR,"远程调用失败");
+                // 判题不成功外层会循环，不成功是不可能的
+                return null;
             }
             // ... 原代码
         } catch (Exception e) {
-            System.err.println("远程调用异常: " + e.getMessage());
-            e.printStackTrace(); // 打印详细堆栈
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "远程调用失败");
+            return null;
         }
 
 

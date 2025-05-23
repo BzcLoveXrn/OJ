@@ -1,13 +1,17 @@
 package com.binzc.oj.service;
 
+import com.binzc.oj.model.dto.questionsubmit.QueryParmRequest;
 import com.binzc.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.binzc.oj.model.entity.QuestionSubmit;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.binzc.oj.model.entity.User;
 import com.binzc.oj.model.vo.CodeVo;
 import com.binzc.oj.model.vo.QuestionSubmitVo;
+import com.binzc.oj.model.vo.SubmitRecodWithPageVo;
+import com.binzc.oj.model.vo.SubmitRecordSimple;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author binzc
@@ -32,4 +36,10 @@ public interface QuestionSubmitService extends IService<QuestionSubmit> {
      */
     QuestionSubmitVo doQuestionSubmit(QuestionSubmitAddRequest questionSubmitAddRequest, User user);
 
+    /**
+     * 获取提交记录
+     * @param queryParmRequest
+     * @return
+     */
+    SubmitRecodWithPageVo getSubmitRecords(QueryParmRequest queryParmRequest);
 }
