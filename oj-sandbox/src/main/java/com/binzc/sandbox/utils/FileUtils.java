@@ -3,11 +3,12 @@ package com.binzc.sandbox.utils;
 
 import cn.hutool.core.io.FileUtil;
 import com.binzc.sandbox.model.LanguageFileNameEnum;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-
+@Slf4j
 public class FileUtils {
     public static final String GLOBAL_CODE_DIR="temp";
     public static String saveFile(String code,String language){
@@ -22,6 +23,7 @@ public class FileUtils {
         String fileName= LanguageFileNameEnum.getEnumFromLanguage(language).getFileName();
         String userCodePath = userCodeParentPath + File.separator + fileName;
         File userCodeFile = FileUtil.writeString(code, userCodePath, StandardCharsets.UTF_8);
+        log.info("用户代码文件路径:{}",userCodeParentPath);
         return userCodeParentPath;
     }
 
