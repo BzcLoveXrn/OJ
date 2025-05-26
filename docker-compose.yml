@@ -6,9 +6,10 @@ services:
       context: ./oj-backend
       dockerfile: Dockerfile
     environment:
-      - MYSQL_URL=jdbc:mysql://host.docker.internal:3306/oj-database?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
-      - MYSQL_USER=root
+      - MYSQL_URL=jdbc:mysql://172.23.233.31:3306/oj-database?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai
+      - MYSQL_USER=binzc
       - MYSQL_PASSWORD=20040713bzc
+      - CODESANDBOX_URL=http://oj-sandbox/8122/api/code/executeCode
     volumes:
       - /home/binzc/service-data/static:/app/static
     ports:
@@ -17,12 +18,11 @@ services:
       - oj-network
 
   oj-frontend:
-    image: nginx:1.25
-    volumes:
-      - ./oj-frontend/dist:/usr/share/nginx/html
-      - ./oj-frontend/nginx.conf:/etc/nginx/conf.d/default.conf
+    build:
+      context: ./oj-frontend
+      dockerfile: Dockerfile
     ports:
-      - "80:80"
+      - "8080:8080"
     depends_on:
       - oj-backend
     networks:
