@@ -42,6 +42,12 @@ public class PythonCodeExecutor implements CodeExecutor {
         List<String>inputList=request.getInputList();
         // 保存文件，放回文件绝对路径
         String absolute=FileUtils.saveFile(code,language);
+        log.info("文件保存好了，快看");
+        try {
+            Thread.sleep(20000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         //下载镜像
         try{
             dockerImageService.ensureImageExists(ImageEnum.PythonImage);
@@ -55,6 +61,7 @@ public class PythonCodeExecutor implements CodeExecutor {
         hostConfig.withMemorySwap(0L);
         hostConfig.withCpuCount(1L);
         //        hostConfig.withSecurityOpts(Arrays.asList("seccomp=安全管理配置字符串"));
+
         hostConfig.setBinds(new Bind(absolute, new Volume("/app")));
         CreateContainerResponse createContainerResponse = containerCmd
                 .withHostConfig(hostConfig)
