@@ -169,8 +169,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             String fileName = dateStr + "_" + userId + suffix;
             File dest = new File(saveDir, fileName);
             file.transferTo(dest);
-            String imgUrl = ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/static/images/" + fileName)
+            String imgUrl = ServletUriComponentsBuilder.fromCurrentRequest()
+                    .replacePath("/static/images/" + fileName)
                     .build()
                     .toUriString();
             return imgUrl;

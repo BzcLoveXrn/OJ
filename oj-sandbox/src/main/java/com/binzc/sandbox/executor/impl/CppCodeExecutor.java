@@ -14,6 +14,7 @@ import com.github.dockerjava.api.model.Volume;
 import com.github.dockerjava.core.command.ExecStartResultCallback;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StopWatch;
 
@@ -30,6 +31,9 @@ public class CppCodeExecutor implements CodeExecutor {
 
     @Autowired
     private DockerClient dockerClient;
+
+    @Value("${sandbox.mount-path}")
+    private String mountPath;
 
     private static final long TIME_OUT = 25000L;
     @Override
@@ -52,7 +56,8 @@ public class CppCodeExecutor implements CodeExecutor {
         hostConfig.withMemorySwap(0L);
         hostConfig.withCpuCount(1L);
         //        hostConfig.withSecurityOpts(Arrays.asList("seccomp=安全管理配置字符串"));
-        hostConfig.setBinds(new Bind(absolute, new Volume("/app")));
+        String phsicalPath =FileUtils.MapToPhysicalPath(mountPath, absolute);
+        hostConfig.setBinds(new Bind(phsicalPath, new Volume("/app")));
         CreateContainerResponse createContainerResponse = containerCmd
                 .withHostConfig(hostConfig)
                 .withNetworkDisabled(true)
