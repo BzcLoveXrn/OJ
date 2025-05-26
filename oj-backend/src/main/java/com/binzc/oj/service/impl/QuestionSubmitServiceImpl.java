@@ -14,10 +14,7 @@ import com.binzc.oj.model.entity.Question;
 import com.binzc.oj.model.entity.User;
 import com.binzc.oj.model.enums.QuestionSubmitLanguageEnum;
 import com.binzc.oj.model.enums.QuestionSubmitStatusEnum;
-import com.binzc.oj.model.vo.CodeVo;
-import com.binzc.oj.model.vo.QuestionSubmitVo;
-import com.binzc.oj.model.vo.SubmitRecodWithPageVo;
-import com.binzc.oj.model.vo.SubmitRecordSimple;
+import com.binzc.oj.model.vo.*;
 import com.binzc.oj.service.QuestionService;
 import com.binzc.oj.service.QuestionSubmitService;
 import com.binzc.oj.model.entity.QuestionSubmit;
@@ -94,7 +91,9 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         questionSubmit.setLanguage(language);
         // 设置初始状态
         questionSubmit.setStatus(QuestionSubmitStatusEnum.WAITING.getValue());
-        questionSubmit.setJudgeInfo("{}");
+        JudgeInfo judgeInfo=new JudgeInfo();
+        judgeInfo.setMessage("正在排队中...,请稍后");
+        questionSubmit.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
         boolean save = this.save(questionSubmit);
         if (!save){
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "数据插入失败");
@@ -133,6 +132,28 @@ public class QuestionSubmitServiceImpl extends ServiceImpl<QuestionSubmitMapper,
         return submitRecodWithPageVo;
 
     }
+
+    @Override
+    public SubmitRecordDetail getSubmitRecordDetail(long submitId) {
+        QuestionSubmit questionSubmit=this.baseMapper.selectById(submitId);
+        if (questionSubmit == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"提交记录不存在");
+        }
+        Long questionId = questionSubmit.getQuestionId();
+        Question question = questionService.getById(questionId);
+        if (question == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "题目不存在");
+        }
+        Long userId = questionSubmit.getUserId();
+        User user = userService.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在");
+        }
+        SubmitRecordDetail submitRecordDetail = SubmitRecordDetail.generateVo(user,questionSubmit, question);
+        return submitRecordDetail;
+    }
+
+
 }
 
 

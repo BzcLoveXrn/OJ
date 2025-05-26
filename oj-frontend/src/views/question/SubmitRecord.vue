@@ -98,15 +98,15 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // export type SubmitRecordDetail = {
 //
 // };
-import { onMounted, ref, computed } from "vue";
+import { onMounted, ref, computed, defineProps, withDefaults } from "vue";
 import {
   QuestionSubmitControllerService,
   SubmitRecordDetail,
-} from "../../generated";
+} from "../../../generated";
 import { Message } from "@arco-design/web-vue";
 const data = ref({
   code: "",
@@ -123,8 +123,16 @@ const data = ref({
   userId: 0,
   userName: "",
 });
+interface Props {
+  id: string;
+}
+const props = withDefaults(defineProps<Props>(), {
+  id: () => "",
+});
 onMounted(async () => {
-  const res = await QuestionSubmitControllerService.getRecordUsingGet(67);
+  const res = await QuestionSubmitControllerService.getRecordUsingGet(
+    Number(props.id)
+  );
   if (res.code === 0) {
     data.value = res.data;
     console.log("res =", data.value);

@@ -14,6 +14,7 @@ import QuestionAddView from "@/views/question/QuestionAdd.vue";
 import QuestionListView from "@/views/question/QuestionList.vue";
 import QuestionDetailView from "@/views/question/QuestionDetail.vue";
 import SubmitRecordsView from "@/views/question/SubmitRecords.vue";
+import SubmitRecordView from "@/views/question/SubmitRecord.vue";
 
 export const routes: Array<RouteRecordRaw> = [
   {
@@ -35,6 +36,10 @@ export const routes: Array<RouteRecordRaw> = [
     meta: {
       hideInMenu: true,
     },
+  },
+  {
+    path: "/",
+    redirect: "/question/list", // 👈 设置默认根路径跳转
   },
   {
     path: "/question/list",
@@ -71,13 +76,8 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
-    path: "/about",
-    name: "关于我的",
-    component: AboutView,
-  },
-  {
     path: "/test",
-    name: "测试",
+    name: "开发人员测试使用",
     component: TestView,
   },
   {
@@ -90,6 +90,15 @@ export const routes: Array<RouteRecordRaw> = [
     props: true,
     name: "questionDetail",
     component: QuestionDetailView,
+    meta: {
+      hideInMenu: true,
+    },
+  },
+  {
+    path: "/record/:id",
+    props: true,
+    name: "recordDetail",
+    component: SubmitRecordView,
     meta: {
       hideInMenu: true,
     },

@@ -111,6 +111,9 @@ public class JudgeServiceImpl implements JudgeService{
             questionSubmitUpdate = new QuestionSubmit();
             questionSubmitUpdate.setId(questionSubmitId);
             questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.PANIC.getValue());
+            JudgeInfo judgeInfo = new JudgeInfo();
+            judgeInfo.setMessage("判题机器异常！！！\n抱歉，请再次提交，代码我们做了保存，只需在题目页面再次提交即可");
+            questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
             update = questionSubmitService.updateById(questionSubmitUpdate);
             if (!update) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
@@ -131,13 +134,14 @@ public class JudgeServiceImpl implements JudgeService{
             questionSubmitUpdate = new QuestionSubmit();
             questionSubmitUpdate.setId(questionSubmitId);
             JudgeInfo judgeInfo=judgeResult.getJudgeInfo();
-            questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeResult.getJudgeInfo()));
             if("Accepted".equals(judgeInfo.getMessage())){
                 questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
 
             }else {
                 questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());
             }
+            judgeInfo.setMessage(executeCodeResponse.getMessage());
+            questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
             questionSubmitUpdate.setJudgeMessages(JSONUtil.toJsonStr(judgeResult.getJudgeMessages()));
             update = questionSubmitService.updateById(questionSubmitUpdate);
             if (!update) {
@@ -155,7 +159,7 @@ public class JudgeServiceImpl implements JudgeService{
             JudgeInfo judgeInfo=new JudgeInfo();
             judgeInfo.setMemory(null);
             judgeInfo.setTime(null);
-            judgeInfo.setMessage("Compile Error");
+            judgeInfo.setMessage(executeCodeResponse.getMessage());
             questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
             update = questionSubmitService.updateById(questionSubmitUpdate);
             if (!update) {

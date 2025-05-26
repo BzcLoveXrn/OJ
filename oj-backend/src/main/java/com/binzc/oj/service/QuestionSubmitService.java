@@ -5,10 +5,7 @@ import com.binzc.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.binzc.oj.model.entity.QuestionSubmit;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.binzc.oj.model.entity.User;
-import com.binzc.oj.model.vo.CodeVo;
-import com.binzc.oj.model.vo.QuestionSubmitVo;
-import com.binzc.oj.model.vo.SubmitRecodWithPageVo;
-import com.binzc.oj.model.vo.SubmitRecordSimple;
+import com.binzc.oj.model.vo.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -42,4 +39,12 @@ public interface QuestionSubmitService extends IService<QuestionSubmit> {
      * @return
      */
     SubmitRecodWithPageVo getSubmitRecords(QueryParmRequest queryParmRequest);
+    /**
+     * 获取提交记录详情
+     * @param submitId
+     * @return
+     */
+    SubmitRecordDetail getSubmitRecordDetail(long submitId);
+
+
 }

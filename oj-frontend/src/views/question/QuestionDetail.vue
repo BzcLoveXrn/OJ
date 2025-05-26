@@ -120,6 +120,11 @@ const submitCode = async () => {
   });
   if (res.code === 0) {
     message.success("提交成功");
+    const recordId = res?.data?.id;
+    router.push({
+      name: "recordDetail",
+      params: { id: recordId },
+    });
   } else {
     message.error(res.message);
   }

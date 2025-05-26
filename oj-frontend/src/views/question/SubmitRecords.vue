@@ -85,9 +85,11 @@
           </a-table-column>
           <a-table-column title="判题状态">
             <template #cell="{ record }">
-              <a-tag :color="getStatusColor(record.status)">{{
-                record.message
-              }}</a-tag>
+              <a-tag
+                :color="getStatusColor(record.status)"
+                @click="goToRecord(record.submitId)"
+                >{{ record.message }}</a-tag
+              >
             </template>
           </a-table-column>
           <a-table-column title="题目标题">
@@ -140,6 +142,7 @@ import {
 } from "../../../generated";
 import { onMounted, ref, watch } from "vue";
 import { Message } from "@arco-design/web-vue";
+import router from "@/router";
 // export type QueryParmRequest = {
 //     language?: string;
 //     pageNo?: number;
@@ -206,6 +209,17 @@ const getStatusColor = (status) => {
     4: "#e74c3c", // 错误
   };
   return colorMap[status] || colorMap.default;
+};
+const goToRecord = (id?: number) => {
+  if (!id) {
+    console.error("goToRecord 被调用时 id 无效:", id);
+    return;
+  }
+
+  router.push({
+    name: "recordDetail",
+    params: { id },
+  });
 };
 </script>
 <style scoped>

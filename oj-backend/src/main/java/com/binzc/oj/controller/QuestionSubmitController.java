@@ -8,10 +8,7 @@ import com.binzc.oj.model.dto.questionsubmit.QueryParmRequest;
 import com.binzc.oj.model.dto.questionsubmit.QuestionSubmitAddRequest;
 import com.binzc.oj.model.entity.QuestionSubmit;
 import com.binzc.oj.model.entity.User;
-import com.binzc.oj.model.vo.CodeVo;
-import com.binzc.oj.model.vo.QuestionSubmitVo;
-import com.binzc.oj.model.vo.SubmitRecodWithPageVo;
-import com.binzc.oj.model.vo.SubmitRecordSimple;
+import com.binzc.oj.model.vo.*;
 import com.binzc.oj.service.QuestionSubmitService;
 import com.binzc.oj.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @Slf4j
@@ -72,4 +70,13 @@ public class QuestionSubmitController {
         SubmitRecodWithPageVo submitRecodWithPageVo=questionSubmitService.getSubmitRecords(queryParmRequest);
         return ResultUtils.success(submitRecodWithPageVo);
     }
+
+    @GetMapping("/record/{id}")
+    public BaseResponse<SubmitRecordDetail> getRecord(@PathVariable("id") Long id, HttpServletResponse response){
+        //Todo:是否需要登录权限
+        SubmitRecordDetail submitRecordDetail=questionSubmitService.getSubmitRecordDetail(id);
+        return ResultUtils.success(submitRecordDetail);
+
+    }
+
 }

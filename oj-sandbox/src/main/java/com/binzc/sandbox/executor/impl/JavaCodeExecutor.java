@@ -93,16 +93,17 @@ public class JavaCodeExecutor implements CodeExecutor {
             //获得码
             InspectExecResponse execResponse = dockerClient.inspectExecCmd(execId).exec();
             Integer exitCode = execResponse.getExitCode();
+            String errorMessage=null;
             try {
                 String message = stdoutStream.toString("UTF-8");
-                String errorMessage = stderrStream.toString("UTF-8");
+                errorMessage = stderrStream.toString("UTF-8");
             } catch (UnsupportedEncodingException e) {
                 throw new RuntimeException("字符集不匹配");
             }
             if(exitCode==null||exitCode!=0){
                 ExecuteCodeResponse executeCodeResponse=new ExecuteCodeResponse();
                 executeCodeResponse.setStatus(exitCode);
-                executeCodeResponse.setMessage("编译失败");
+                executeCodeResponse.setMessage(errorMessage);
                 executeCodeResponse.setExecuteMessageList(null);
                 return executeCodeResponse;
             }
@@ -222,7 +223,7 @@ public class JavaCodeExecutor implements CodeExecutor {
         ExecuteCodeResponse executeCodeResponse=new ExecuteCodeResponse();
         executeCodeResponse.setExecuteMessageList(data);
         executeCodeResponse.setStatus(0);
-        executeCodeResponse.setMessage("执行成功");
+        executeCodeResponse.setMessage("代码沙箱执行无误");
         return executeCodeResponse;
     }
 

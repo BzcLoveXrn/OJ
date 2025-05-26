@@ -227,8 +227,6 @@
       </a-form-item>
     </a-form>
   </div>
-
-  {{ form }}
 </template>
 <script setup lang="ts">
 import { ref, watch } from "vue";

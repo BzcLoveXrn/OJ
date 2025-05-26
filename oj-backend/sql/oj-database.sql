@@ -14,6 +14,16 @@
  Date: 23/05/2025 17:11:16
 */
 
+/*# 数据库初始化
+# @author <a href="https://github.com/liyupi">程序员鱼皮</a>
+# @from <a href="https://yupi.icu">编程导航知识星球</a>
+*/
+-- 创建库
+create database if not exists `oj-database`;
+
+-- 切换库
+use `oj-database`;
+
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 

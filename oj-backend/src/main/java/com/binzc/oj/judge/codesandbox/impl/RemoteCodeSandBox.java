@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 @Component
 public class RemoteCodeSandBox implements CodeSandBox {
-    @Value("${codesandbox.url:http://121.40.216.152:8122/api/code/executeCode}")
+    @Value("${codesandbox.url:http://localhost:8122/api/code/executeCode}")
     private String url;
 
     @Autowired
