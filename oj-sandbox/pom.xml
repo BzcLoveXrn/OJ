@@ -65,6 +65,7 @@
 
     </dependencies>
     <build>
+        <finalName>oj-sandbox</finalName>
         <plugins>
             <!-- 编译插件保留 -->
             <plugin>

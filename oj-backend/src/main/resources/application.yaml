@@ -1,23 +1,17 @@
 server:
   address: 0.0.0.0
-  port: 8121
+  port: ${SERVER_PORT:8121}
   servlet:
     context-path: /api
     session:
       cookie:
         max-age: 2592000
-
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/oj-database
-    username: root
-    password: 20040713bzc
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/oj-database?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD:20040713bzc}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-  web:
-    resources:
-      static-locations: file:../images/
-
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
@@ -37,3 +31,6 @@ mybatis-plus:
   mapper-locations: classpath*:mapper/*.xml
 
 
+codesandbox:
+  type: ${CODESANDBOX_TYPE:remote}
+  url: ${CODESANDBOX_URL:http://localhost:8122/api/code/executeCode}

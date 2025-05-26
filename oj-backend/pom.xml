@@ -70,6 +70,7 @@
 
     </dependencies>
     <build>
+        <finalName>oj-backend</finalName>
         <plugins>
             <!-- 编译插件保留 -->
             <plugin>
