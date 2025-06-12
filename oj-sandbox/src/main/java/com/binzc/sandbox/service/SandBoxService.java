@@ -8,10 +8,17 @@ import com.binzc.sandbox.model.ExecuteCodeResponse;
  */
 public interface SandBoxService {
     /**
-     * 执行代码
+     * 取出消息执行代码
      * @param executeCodeRequest
      * @return
      */
-    ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest);
+
+    void receiveMessage(ExecuteCodeRequest executeCodeRequest);
+
+    /**
+     * 返回执行结果
+     * @param executeCodeResponse
+     */
+    void putResult(ExecuteCodeResponse executeCodeResponse);
 
 }

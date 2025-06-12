@@ -8,8 +8,7 @@
         <router-view />
       </a-layout-content>
       <a-layout-footer class="footer">
-        Footer
-        <a href="https://www.google.com">shabi</a>
+        <a href="https://www.bilibili.com/">Welcom to binzc's OJ</a>
       </a-layout-footer>
     </a-layout>
   </div>

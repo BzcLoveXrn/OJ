@@ -1,12 +1,13 @@
 package com.binzc.sandbox.service.Impl;
 
-import com.binzc.sandbox.common.ErrorCode;
-import com.binzc.sandbox.exception.BusinessException;
+
 import com.binzc.sandbox.executor.CodeExecutor;
 import com.binzc.sandbox.model.ExecuteCodeRequest;
 import com.binzc.sandbox.model.ExecuteCodeResponse;
 import com.binzc.sandbox.model.LanguageEnum;
 import com.binzc.sandbox.service.SandBoxService;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,11 @@ public class SandBoxServiceImpl implements SandBoxService {
     private final Map<LanguageEnum, CodeExecutor> executorMap;
 
     @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+
+
+    @Autowired
     public SandBoxServiceImpl(List<CodeExecutor> executors) {
         this.executorMap = executors.stream()
                 .collect(Collectors.toMap(
@@ -29,21 +35,24 @@ public class SandBoxServiceImpl implements SandBoxService {
                         }
                 ));
     }
+
     @Override
-    public ExecuteCodeResponse executeCode(ExecuteCodeRequest executeCodeRequest) {
+    @RabbitListener(queues = "judge_task_queue",ackMode = "AUTO")
+    public void receiveMessage(ExecuteCodeRequest executeCodeRequest) {
         LanguageEnum language;
         try {
             language = LanguageEnum.fromValue(executeCodeRequest.getLanguage());
         } catch (IllegalArgumentException ex) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"语言不支持");
+            throw ex;
         }
-
         CodeExecutor executor = executorMap.get(language);
-        if (executor == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR,"语言不支持");
-        }
+        ExecuteCodeResponse executeCodeResponse= executor.execute(executeCodeRequest);
+        executeCodeResponse.setQuestionSubmitId(executeCodeRequest.getQuestionSubmitId());
+        putResult(executeCodeResponse);
+    }
 
-        return executor.execute(executeCodeRequest);
-
+    @Override
+    public void putResult(ExecuteCodeResponse executeCodeResponse) {
+        rabbitTemplate.convertAndSend("judge_exchange","judge_result",executeCodeResponse);
     }
 }

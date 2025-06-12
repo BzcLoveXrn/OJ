@@ -1,4 +1,4 @@
-package com.binzc.oj.judge.codesandbox.model;
+package com.binzc.oj.judge.model;
 
 import lombok.Data;
 

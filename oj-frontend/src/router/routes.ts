@@ -76,14 +76,12 @@ export const routes: Array<RouteRecordRaw> = [
     },
   },
   {
-    path: "/test",
-    name: "开发人员测试使用",
-    component: TestView,
-  },
-  {
     path: "/question/add",
     name: "添加题目",
     component: QuestionAddView,
+    meta: {
+      access: ACCESS_ENUM.ADMIN,
+    },
   },
   {
     path: "/question/:id",
@@ -101,6 +99,7 @@ export const routes: Array<RouteRecordRaw> = [
     component: SubmitRecordView,
     meta: {
       hideInMenu: true,
+      access: ACCESS_ENUM.USER,
     },
   },
 ];

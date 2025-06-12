@@ -1,4 +1,4 @@
-package com.binzc.oj.judge.codesandbox.model;
+package com.binzc.oj.judge.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,6 +12,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExecuteCodeRequest {
+
+    private Long questionSubmitId;
 
     private List<String> inputList;
 

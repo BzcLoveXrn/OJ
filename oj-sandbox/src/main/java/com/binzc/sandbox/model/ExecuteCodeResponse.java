@@ -33,6 +33,10 @@ public class ExecuteCodeResponse {
      * @Description 我觉得鱼皮这里设计的不好，应该就是一个用例一个信息的
      * 执行信息
      */
+
+    private  long questionSubmitId;
+
+
     private List<ExecuteMessage> executeMessageList;
 
     private int status;

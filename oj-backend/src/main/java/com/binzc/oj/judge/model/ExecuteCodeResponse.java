@@ -1,4 +1,4 @@
-package com.binzc.oj.judge.codesandbox.model;
+package com.binzc.oj.judge.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,6 +33,8 @@ public class ExecuteCodeResponse {
      * @Description 我觉得鱼皮这里设计的不好，应该就是一个用例一个信息的
      * 执行信息
      */
+    private  Long questionSubmitId;
+
     private List<ExecuteMessage> executeMessageList;
 
     private int status;

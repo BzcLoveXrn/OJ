@@ -1,10 +1,8 @@
 package com.binzc.oj.judge;
 
 
-import com.binzc.oj.judge.codesandbox.model.JudgeResult;
+import com.binzc.oj.judge.model.JudgeResult;
 import com.binzc.oj.judge.strategy.*;
-import com.binzc.oj.model.dto.questionsubmit.JudgeInfo;
-import com.binzc.oj.model.entity.QuestionSubmit;
 import org.springframework.stereotype.Service;
 
 /**

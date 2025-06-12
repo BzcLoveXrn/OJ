@@ -44,13 +44,7 @@ public class PythonCodeExecutor implements CodeExecutor {
         String language = request.getLanguage();
         List<String>inputList=request.getInputList();
         // 保存文件，放回文件绝对路径
-        String absolute=FileUtils.saveFile(code,language);
-        log.info("文件保存好了，快看");
-        try {
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        String codePath=FileUtils.saveFile(code,language);
         //下载镜像
         try{
             dockerImageService.ensureImageExists(ImageEnum.PythonImage);
@@ -64,12 +58,10 @@ public class PythonCodeExecutor implements CodeExecutor {
         hostConfig.withMemorySwap(0L);
         hostConfig.withCpuCount(1L);
         //        hostConfig.withSecurityOpts(Arrays.asList("seccomp=安全管理配置字符串"));
-        String phsicalPath =FileUtils.MapToPhysicalPath(mountPath, absolute);
-        hostConfig.setBinds(new Bind(phsicalPath, new Volume("/app")));
         CreateContainerResponse createContainerResponse = containerCmd
                 .withHostConfig(hostConfig)
                 .withNetworkDisabled(true)
-                .withReadonlyRootfs(true)
+                //.withReadonlyRootfs(true)
                 .withCmd("tail", "-f", "/dev/null")
                 .withAttachStdin(true)
                 .withAttachStderr(true)
@@ -79,6 +71,11 @@ public class PythonCodeExecutor implements CodeExecutor {
         String containerId = createContainerResponse.getId();
         // 启动容器
         dockerClient.startContainerCmd(containerId).exec();
+        dockerClient.copyArchiveToContainerCmd(containerId)
+                .withHostResource(codePath) // 本地代码路径，例如 /tmp/xxx/Main.java
+                .withRemotePath("/app") // 容器内路径
+                .exec();
+
         List<ExecuteMessage>data=new ArrayList<>();
         for(String inputArgs:inputList){
             // 处理输入
@@ -187,7 +184,7 @@ public class PythonCodeExecutor implements CodeExecutor {
 
         }
         dockerClient.removeContainerCmd(containerId).withForce(true).exec();
-        FileUtils.deleteFile(absolute);
+        FileUtils.deleteFile(codePath);
         ExecuteCodeResponse executeCodeResponse=new ExecuteCodeResponse();
         executeCodeResponse.setExecuteMessageList(data);
         executeCodeResponse.setStatus(0);

@@ -15,9 +15,30 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
+  rabbitmq:
+    host: ${MQ_URL:121.40.216.152}       # RabbitMQ 服务器地址（如果是在 Docker 内运行，可以写容器名）
+    port: 5672            # AMQP 默认端口
+    username: ${MQ_USER:binzc}      # 默认用户名（你可以改成自己的）
+    password: ${MQ_PASSWORD:20040713bzc}      # 默认密码
+    virtual-host: /       # 默认虚拟主机，基本不用改
+    listener:
+      simple:
+        acknowledge-mode: auto     # 自动确认（推荐先用）
+        concurrency: 3             # 同时监听的线程数（可选）
+        max-concurrency: 10        # 最大线程数（可选）
+    template:
+      mandatory: true              # 启用强制投递（可选）
+  session:
+    store-type: redis
+  redis:
+    host: ${REDIS_URL:121.40.216.152}
+    port: 6379
+
 
   jackson:
     time-zone: Asia/Shanghai
+    serialization:
+      indent-output: true          # JSON 美化输出（可选）
 
 mybatis-plus:
   configuration:
@@ -29,8 +50,3 @@ mybatis-plus:
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
   mapper-locations: classpath*:mapper/*.xml
-
-
-codesandbox:
-  type: ${CODESANDBOX_TYPE:remote}
-  url: ${CODESANDBOX_URL:http://localhost:8122/api/code/executeCode}

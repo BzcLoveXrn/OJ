@@ -3,9 +3,7 @@ package com.binzc.oj.judge;
 import cn.hutool.json.JSONUtil;
 import com.binzc.oj.common.ErrorCode;
 import com.binzc.oj.exception.BusinessException;
-import com.binzc.oj.judge.codesandbox.CodeSandBox;
-import com.binzc.oj.judge.codesandbox.CodeSandBoxFactory;
-import com.binzc.oj.judge.codesandbox.model.*;
+import com.binzc.oj.judge.model.*;
 import com.binzc.oj.judge.strategy.JudgeContext;
 import com.binzc.oj.model.dto.question.JudgeCase;
 import com.binzc.oj.model.dto.question.JudgeConfig;
@@ -17,15 +15,17 @@ import com.binzc.oj.service.QuestionService;
 import com.binzc.oj.service.QuestionSubmitService;
 import com.binzc.oj.service.UserService;
 import com.binzc.oj.model.enums.QuestionSubmitStatusEnum;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+@Slf4j
 @Service
 public class JudgeServiceImpl implements JudgeService{
     @Resource
@@ -39,14 +39,17 @@ public class JudgeServiceImpl implements JudgeService{
     @Resource
     private JudgeManager judgeManager;
 
-    @Resource
-    private CodeSandBoxFactory codeSandBoxFactory;
 
-    @Value("${codesandbox.type:remote}")
-    private String type;
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    public void submitToQueue(ExecuteCodeRequest executeCodeRequest) {
+        // 发送任务到交换机，指定 routingKey
+        rabbitTemplate.convertAndSend("judge_exchange", "judge_task", executeCodeRequest);
+    }
 
     @Override
-    public QuestionSubmit doJudge(long questionSubmitId) {
+    public void submitJudge(long questionSubmitId) {
         //获取题目提交对象，做一些处理
         QuestionSubmit questionSubmit = questionSubmitService.getById(questionSubmitId);
         if(questionSubmit== null){
@@ -76,9 +79,6 @@ public class JudgeServiceImpl implements JudgeService{
         if (!update) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
         }
-        //根据配置文件，获得相应的沙箱
-        CodeSandBoxType codeSandBoxType = CodeSandBoxType.getEnumByValue(type);
-        CodeSandBox codeSandBox= codeSandBoxFactory.newCodeSandBox(codeSandBoxType);
         // 构建判题机输入用例
         String language=questionSubmit.getLanguage();
         String code=questionSubmit.getCode();
@@ -89,36 +89,35 @@ public class JudgeServiceImpl implements JudgeService{
                 .code(code)
                 .language(language)
                 .inputList(inputList)
+                .questionSubmitId(questionSubmitId)
                 .build();
-        int retryCount = 0;
-        int maxRetry = 5;
-        ExecuteCodeResponse executeCodeResponse = null;
+        submitToQueue(executeCodeRequest);
 
-        do {
-            executeCodeResponse = codeSandBox.executeCode(executeCodeRequest);
-            retryCount++;
-            try {
-                if (executeCodeResponse == null) {
-                    Thread.sleep(200); // 加一点点延迟，避免空转
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException("线程中断异常");
-            }
-        } while (executeCodeResponse == null && retryCount < maxRetry);
+    }
 
+
+    @Override
+    @RabbitListener(queues = "judge_result_queue",ackMode = "AUTO")
+    public void getJudgeResult(ExecuteCodeResponse executeCodeResponse) {
+        long questionSubmitId= executeCodeResponse.getQuestionSubmitId();
+        //获取题目提交对象，做一些处理
+        QuestionSubmit questionSubmit = questionSubmitService.getById(questionSubmitId);
+        if(questionSubmit== null){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"题目提交信息不存在");
+        }
+        //获取题目信息，做一些处理
+        long questionId = questionSubmit.getQuestionId();
+        Question question=questionService.getById(questionId);
+        if(question== null){
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"题目信息不存在");
+        }
+        String language=questionSubmit.getLanguage();
+        String code=questionSubmit.getCode();
+        String judgeCaseStr = question.getJudgeCase();
+        List<JudgeCase> judgeCaseList = JSONUtil.toList(judgeCaseStr, JudgeCase.class);
         // 没办法咯，判题一直失败，可能是服务挂了
         if (executeCodeResponse == null) {
-            questionSubmitUpdate = new QuestionSubmit();
-            questionSubmitUpdate.setId(questionSubmitId);
-            questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.PANIC.getValue());
-            JudgeInfo judgeInfo = new JudgeInfo();
-            judgeInfo.setMessage("判题机器异常！！！\n抱歉，请再次提交，代码我们做了保存，只需在题目页面再次提交即可");
-            questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-            update = questionSubmitService.updateById(questionSubmitUpdate);
-            if (!update) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
-            }
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "执行代码失败，已重试多次");
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "消息队列异常");
         }
         //成功，开始判题
         else if(executeCodeResponse.getStatus()==0&&executeCodeResponse.getExecuteMessageList()!=null){
@@ -131,7 +130,7 @@ public class JudgeServiceImpl implements JudgeService{
             JudgeConfig judgeConfig=JSONUtil.toBean(question.getJudgeConfig(), JudgeConfig.class);
             judgeContext.setJudgeConfig(judgeConfig);
             JudgeResult judgeResult=judgeManager.doJudge(judgeContext);
-            questionSubmitUpdate = new QuestionSubmit();
+            QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
             questionSubmitUpdate.setId(questionSubmitId);
             JudgeInfo judgeInfo=judgeResult.getJudgeInfo();
             if("Accepted".equals(judgeInfo.getMessage())){
@@ -143,17 +142,15 @@ public class JudgeServiceImpl implements JudgeService{
             judgeInfo.setMessage(executeCodeResponse.getMessage());
             questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
             questionSubmitUpdate.setJudgeMessages(JSONUtil.toJsonStr(judgeResult.getJudgeMessages()));
-            update = questionSubmitService.updateById(questionSubmitUpdate);
+            boolean update = questionSubmitService.updateById(questionSubmitUpdate);
             if (!update) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
             }
-            QuestionSubmit questionSubmitResult = questionSubmitService.getById(questionId);
-            return questionSubmitResult;
 
         }
         //编译错误
         else if (executeCodeResponse.getStatus()!=0&&executeCodeResponse.getExecuteMessageList()==null) {
-            questionSubmitUpdate = new QuestionSubmit();
+            QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
             questionSubmitUpdate.setId(questionSubmitId);
             questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());
             JudgeInfo judgeInfo=new JudgeInfo();
@@ -161,7 +158,7 @@ public class JudgeServiceImpl implements JudgeService{
             judgeInfo.setTime(null);
             judgeInfo.setMessage(executeCodeResponse.getMessage());
             questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-            update = questionSubmitService.updateById(questionSubmitUpdate);
+            boolean update = questionSubmitService.updateById(questionSubmitUpdate);
             if (!update) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
             }

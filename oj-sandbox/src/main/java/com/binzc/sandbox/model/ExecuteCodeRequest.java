@@ -12,6 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ExecuteCodeRequest {
+    private long questionSubmitId;
 
     private List<String> inputList;
 

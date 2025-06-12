@@ -42,7 +42,7 @@ public class CppCodeExecutor implements CodeExecutor {
         String language = request.getLanguage();
         List<String> inputList=request.getInputList();
         // 保存文件，放回文件绝对路径
-        String absolute= FileUtils.saveFile(code,language);
+        String codePath= FileUtils.saveFile(code,language);
         //下载镜像
         try{
             dockerImageService.ensureImageExists(ImageEnum.CppImage);
@@ -56,12 +56,10 @@ public class CppCodeExecutor implements CodeExecutor {
         hostConfig.withMemorySwap(0L);
         hostConfig.withCpuCount(1L);
         //        hostConfig.withSecurityOpts(Arrays.asList("seccomp=安全管理配置字符串"));
-        String phsicalPath =FileUtils.MapToPhysicalPath(mountPath, absolute);
-        hostConfig.setBinds(new Bind(phsicalPath, new Volume("/app")));
         CreateContainerResponse createContainerResponse = containerCmd
                 .withHostConfig(hostConfig)
                 .withNetworkDisabled(true)
-                .withReadonlyRootfs(true)
+                //.withReadonlyRootfs(true)
                 .withWorkingDir("/app")  // 设置工作目录
                 .withCmd("tail", "-f", "/dev/null")
                 .withAttachStdin(true)
@@ -72,6 +70,11 @@ public class CppCodeExecutor implements CodeExecutor {
         String containerId = createContainerResponse.getId();
         // 启动容器
         dockerClient.startContainerCmd(containerId).exec();
+        dockerClient.copyArchiveToContainerCmd(containerId)
+                .withHostResource(codePath) // 本地代码路径，例如 /tmp/xxx/Main.java
+                .withRemotePath("/app") // 容器内路径
+                .exec();
+
         //编译阶段
         {
             // 创建命令
@@ -223,7 +226,7 @@ public class CppCodeExecutor implements CodeExecutor {
 
         }
         dockerClient.removeContainerCmd(containerId).withForce(true).exec();
-        FileUtils.deleteFile(absolute);
+        FileUtils.deleteFile(codePath);
         ExecuteCodeResponse executeCodeResponse=new ExecuteCodeResponse();
         executeCodeResponse.setExecuteMessageList(data);
         executeCodeResponse.setStatus(0);
