@@ -51,6 +51,7 @@ public class JavaCodeExecutor implements CodeExecutor {
             throw new RuntimeException("下载镜像失败");
         }
         //创建容器
+        log.info("开始创建容器");
         CreateContainerCmd containerCmd = dockerClient.createContainerCmd(ImageEnum.JavaImage.getImageName());
         HostConfig hostConfig = new HostConfig();
         hostConfig.withMemory(512 * 1000 * 1000L);
@@ -69,6 +70,7 @@ public class JavaCodeExecutor implements CodeExecutor {
         log.info("创建容器："+createContainerResponse.toString());
         String containerId = createContainerResponse.getId();
         // 启动容器
+        log.info("开始启动容器");
         dockerClient.startContainerCmd(containerId).exec();
         dockerClient.copyArchiveToContainerCmd(containerId)
                 .withHostResource(codePath) // 本地代码路径，例如 /tmp/xxx/Main.java
@@ -77,6 +79,7 @@ public class JavaCodeExecutor implements CodeExecutor {
 
         //编译阶段
         {
+            log.info("开始编译");
             // 创建命令
             ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(containerId)
                     .withCmd("javac", "Main.java")
@@ -177,6 +180,7 @@ public class JavaCodeExecutor implements CodeExecutor {
                 //开始监控时间
                 StopWatch stopWatch = new StopWatch();
                 stopWatch.start();
+                log.info("开始执行命令");
 
                 // 直接开始执行命令
                 dockerClient.execStartCmd(execId)

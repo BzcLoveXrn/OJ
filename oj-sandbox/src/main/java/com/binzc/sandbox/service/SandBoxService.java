@@ -2,6 +2,8 @@ package com.binzc.sandbox.service;
 
 import com.binzc.sandbox.model.ExecuteCodeRequest;
 import com.binzc.sandbox.model.ExecuteCodeResponse;
+import com.rabbitmq.client.Channel;
+import org.springframework.amqp.core.Message;
 
 /**
  * 沙箱服务接口
@@ -13,7 +15,7 @@ public interface SandBoxService {
      * @return
      */
 
-    void receiveMessage(ExecuteCodeRequest executeCodeRequest);
+    void receiveMessage(ExecuteCodeRequest executeCodeRequest, Channel channel, Message message);
 
     /**
      * 返回执行结果

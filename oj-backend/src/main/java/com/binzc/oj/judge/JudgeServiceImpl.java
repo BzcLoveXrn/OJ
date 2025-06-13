@@ -97,74 +97,103 @@ public class JudgeServiceImpl implements JudgeService{
 
 
     @Override
-    @RabbitListener(queues = "judge_result_queue",ackMode = "AUTO")
+    @RabbitListener(queues = "judge_result_queue", ackMode = "AUTO")
     public void getJudgeResult(ExecuteCodeResponse executeCodeResponse) {
-        long questionSubmitId= executeCodeResponse.getQuestionSubmitId();
-        //获取题目提交对象，做一些处理
-        QuestionSubmit questionSubmit = questionSubmitService.getById(questionSubmitId);
-        if(questionSubmit== null){
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"题目提交信息不存在");
-        }
-        //获取题目信息，做一些处理
-        long questionId = questionSubmit.getQuestionId();
-        Question question=questionService.getById(questionId);
-        if(question== null){
-            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR,"题目信息不存在");
-        }
-        String language=questionSubmit.getLanguage();
-        String code=questionSubmit.getCode();
-        String judgeCaseStr = question.getJudgeCase();
-        List<JudgeCase> judgeCaseList = JSONUtil.toList(judgeCaseStr, JudgeCase.class);
-        // 没办法咯，判题一直失败，可能是服务挂了
-        if (executeCodeResponse == null) {
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "消息队列异常");
-        }
-        //成功，开始判题
-        else if(executeCodeResponse.getStatus()==0&&executeCodeResponse.getExecuteMessageList()!=null){
-            List<ExecuteMessage>executeMessages=executeCodeResponse.getExecuteMessageList();
-            List<String> outputList = judgeCaseList.stream().map(JudgeCase::getOutput).collect(Collectors.toList());
-            JudgeContext judgeContext=new JudgeContext();
-            judgeContext.setExecuteMessages(executeMessages);
-            judgeContext.setOutputList(outputList);
-            judgeContext.setLanguage(language);
-            JudgeConfig judgeConfig=JSONUtil.toBean(question.getJudgeConfig(), JudgeConfig.class);
-            judgeContext.setJudgeConfig(judgeConfig);
-            JudgeResult judgeResult=judgeManager.doJudge(judgeContext);
-            QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
-            questionSubmitUpdate.setId(questionSubmitId);
-            JudgeInfo judgeInfo=judgeResult.getJudgeInfo();
-            if("Accepted".equals(judgeInfo.getMessage())){
-                questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
+        try {
+            long questionSubmitId = executeCodeResponse.getQuestionSubmitId();
+            //获取题目提交对象，做一些处理
+            QuestionSubmit questionSubmit = questionSubmitService.getById(questionSubmitId);
+            if (questionSubmit == null) {
+                log.error("题目提交信息不存在，ID={}", questionSubmitId);
+                return;
+            }
 
-            }else {
+            //获取题目信息，做一些处理
+            long questionId = questionSubmit.getQuestionId();
+            Question question = questionService.getById(questionId);
+            if (question == null) {
+                log.error("题目信息不存在，ID={}", questionId);
+                return;
+            }
+
+            String language = questionSubmit.getLanguage();
+            String code = questionSubmit.getCode();
+            String judgeCaseStr = question.getJudgeCase();
+            List<JudgeCase> judgeCaseList = JSONUtil.toList(judgeCaseStr, JudgeCase.class);
+
+            // 判题服务挂掉情况
+            if (executeCodeResponse.getStatus() == 0x3f3f3f3f) {
+                QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
+                questionSubmitUpdate.setId(questionSubmitId);
+                questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.PANIC.getValue());
+                boolean update = questionSubmitService.updateById(questionSubmitUpdate);
+                if (!update) {
+                    log.error("题目状态更新错误（PANIC），ID={}", questionSubmitId);
+                }
+                log.error("消息队列异常，沙箱挂掉，响应信息：{}", JSONUtil.toJsonStr(executeCodeResponse));
+                return;
+            }
+
+            //成功，开始判题
+            else if (executeCodeResponse.getStatus() == 0 && executeCodeResponse.getExecuteMessageList() != null) {
+                List<ExecuteMessage> executeMessages = executeCodeResponse.getExecuteMessageList();
+                List<String> outputList = judgeCaseList.stream().map(JudgeCase::getOutput).collect(Collectors.toList());
+                JudgeContext judgeContext = new JudgeContext();
+                judgeContext.setExecuteMessages(executeMessages);
+                judgeContext.setOutputList(outputList);
+                judgeContext.setLanguage(language);
+                JudgeConfig judgeConfig = JSONUtil.toBean(question.getJudgeConfig(), JudgeConfig.class);
+                judgeContext.setJudgeConfig(judgeConfig);
+
+                JudgeResult judgeResult = judgeManager.doJudge(judgeContext);
+                QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
+                questionSubmitUpdate.setId(questionSubmitId);
+                JudgeInfo judgeInfo = judgeResult.getJudgeInfo();
+
+                if ("Accepted".equals(judgeInfo.getMessage())) {
+                    questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.SUCCEED.getValue());
+                } else {
+                    questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());
+                }
+
+                judgeInfo.setMessage(executeCodeResponse.getMessage());
+                questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
+                questionSubmitUpdate.setJudgeMessages(JSONUtil.toJsonStr(judgeResult.getJudgeMessages()));
+                boolean update = questionSubmitService.updateById(questionSubmitUpdate);
+                if (!update) {
+                    log.error("题目状态更新错误（判题结果），ID={}", questionSubmitId);
+                }
+            }
+
+            //编译错误
+            else if (executeCodeResponse.getStatus() != 0 && executeCodeResponse.getExecuteMessageList() == null) {
+                QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
+                questionSubmitUpdate.setId(questionSubmitId);
                 questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());
-            }
-            judgeInfo.setMessage(executeCodeResponse.getMessage());
-            questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-            questionSubmitUpdate.setJudgeMessages(JSONUtil.toJsonStr(judgeResult.getJudgeMessages()));
-            boolean update = questionSubmitService.updateById(questionSubmitUpdate);
-            if (!update) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
+
+                JudgeInfo judgeInfo = new JudgeInfo();
+                judgeInfo.setMemory(null);
+                judgeInfo.setTime(null);
+                judgeInfo.setMessage(executeCodeResponse.getMessage());
+                questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
+
+                boolean update = questionSubmitService.updateById(questionSubmitUpdate);
+                if (!update) {
+                    log.error("题目状态更新错误（编译失败），ID={}", questionSubmitId);
+                }
+
+                log.error("执行代码失败，状态={}，消息={}", executeCodeResponse.getStatus(), executeCodeResponse.getMessage());
+                return;
             }
 
-        }
-        //编译错误
-        else if (executeCodeResponse.getStatus()!=0&&executeCodeResponse.getExecuteMessageList()==null) {
-            QuestionSubmit questionSubmitUpdate = new QuestionSubmit();
-            questionSubmitUpdate.setId(questionSubmitId);
-            questionSubmitUpdate.setStatus(QuestionSubmitStatusEnum.FAILED.getValue());
-            JudgeInfo judgeInfo=new JudgeInfo();
-            judgeInfo.setMemory(null);
-            judgeInfo.setTime(null);
-            judgeInfo.setMessage(executeCodeResponse.getMessage());
-            questionSubmitUpdate.setJudgeInfo(JSONUtil.toJsonStr(judgeInfo));
-            boolean update = questionSubmitService.updateById(questionSubmitUpdate);
-            if (!update) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "题目状态更新错误");
+            // 其他未处理情况
+            else {
+                log.error("作者写代码不严谨，收到异常响应：{}", JSONUtil.toJsonStr(executeCodeResponse));
             }
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "执行代码失败，已重试多次");
-        }else{
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "作者写代码不严谨的错误");
+        } catch (Exception e) {
+            log.error("处理判题结果时发生异常：{}", e.getMessage(), e);
+            // 不抛异常，避免重复消费
         }
     }
+
 }

@@ -41,6 +41,7 @@ public class DockerImageService {
             InspectImageResponse image = dockerClient.inspectImageCmd(imageName).exec();
             return image != null;
         } catch (NotFoundException e) {
+            log.error("镜像不存在: " + imageName);
             return false;
         }
     }
